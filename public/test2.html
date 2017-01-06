@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>test</title>
+</head>
+<body>
+<script>
+</script>
+<script src="peer-client.js"></script>
+<script>
+    Peer.util = window.util;
+    if (Peer.util.supports.data) {
+    
+        var peer = new Peer('456', {host: 'localhost', port: 9000, path: '/peerjs', key: 'qhxin', debug: 3});
+        peer.on('open', function(id) {
+            console.log('My peer ID is: ' + id);
+          
+            var conn = peer.connect('123');
+            conn.on('open', function() {
+                // Receive messages
+                conn.on('data', function(data) {
+                    console.log('Received', data);
+                });
+
+                // Send messages
+                conn.send('Hello!');
+            });
+        });
+    
+    }
+</script>
+</body>
+</html>
