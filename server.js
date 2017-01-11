@@ -68,7 +68,6 @@ var SourcePool = (function(){
                 idArray.push(mapItemKey);
                 srcArrayMap[mapItemKey] = true;
             }
-            console.log('哈哈：',"\n",idsMap,"\n", srcMap,"\n", itemMap.all())
         },
         'out': function(/* String */ id){
             var keys = idsMap[id],
@@ -89,7 +88,6 @@ var SourcePool = (function(){
                 }
             }
             delete idsMap[id];
-            console.log('哈哈2：',"\n",idsMap,"\n", srcMap,"\n", itemMap.all())
         },
         'find': function(/* String */ url){
             var urls_keys = srcMap[url];
@@ -116,6 +114,9 @@ peerServer.on('connection', function(id) {
     console.log('[ACC]C:'+ id+ '. T:'+ peerConnectedCount);
 });
 peerServer.on('disconnect', function(id) {
+    // clear 
+    SourcePool.out(id);
+    
     peerConnectedCount--;
     console.log('[ACC]D:'+ id+ '. T:'+ peerConnectedCount);
 });
@@ -132,16 +133,39 @@ app.get('/', function(req, res, next) { res.send('Hello world!'); });
 app.get('/peer_connected_count', function(req, res, next) { res.send('Count: '+ peerConnectedCount); });
 
 // ClientOwnSource
+// post /own
+// data: { id , urls }
 app.post('/own',urlencodedParser, function(req, res, next) {
     if(req.body && req.body.data){
         var data = JSON.parse(req.body.data),
-            flag = false;
+            result = {'flag': false};
         if(data.id && data.urls && Array.isArray(data.urls)){
             SourcePool.own(data.id, data.urls);
-            flag = true;
+            result.flag = true;
         }
         res.setHeader('Content-Type', 'text/json');  
-        res.send(JSON.stringify({'flag': flag}));
+        res.send(JSON.stringify(result));
+    }else{
+        res.sendStatus(404);
+    }
+});
+
+// ClientFindSource
+// post /find
+// data: { url }
+app.post('/find',urlencodedParser, function(req, res, next) {
+    if(req.body && req.body.data){
+        var data = JSON.parse(req.body.data),
+            result = {'flag': false};
+        if(data.url){
+            var peer_id = SourcePool.find(data.url);
+            if(peer_id){
+                result.flag = true;
+                result.data = peer_id;
+            }
+        }
+        res.setHeader('Content-Type', 'text/json');  
+        res.send(JSON.stringify(result));
     }else{
         res.sendStatus(404);
     }
